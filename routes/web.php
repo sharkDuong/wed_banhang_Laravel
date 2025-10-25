@@ -1,6 +1,5 @@
 <?php
-
-use Illuminate\Support\Facades\Route;
+require_once 'auth.php';
 require_once 'client.php';
 require_once 'admin.php';
 

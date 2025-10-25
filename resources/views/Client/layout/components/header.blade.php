@@ -226,15 +226,28 @@
                             </svg>
                         </a>
                         <ul class="sub-menu">
-                            <li>
-                                <a href="login.html">Login</a>
-                            </li>
-                            <li>
-                                <a href="register.html">Register</a>
-                            </li>
-                            <li>
-                                <a href="checkout.html">Checkout</a>
-                            </li>
+                            @auth
+                                {{-- <li>
+                                    <a href="login.html">{{ Auth::user()->name }}</a>
+                                </li> --}}
+                                <li>
+                                    <a href="login.html">tài khoản</a>
+                                </li>
+                                <li>
+                                    <form action="{{ route('auth.logout.post') }}" method="post">
+                                        @csrf
+                                        <button type="submit" class="btn btn-primary">Đăng xuất</button>
+                                    </form>
+                                </li>
+                            @endauth
+                            @guest
+                                <li>
+                                    <a href="{{ route('auth.login.index') }}">Đăng nhập</a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('auth.register.index') }}">Đăng ký</a>
+                                </li>
+                            @endguest
                         </ul>
                     </div>
                     <div class="mn-tool-wish">
