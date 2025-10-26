@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Jobs\SendVeryEmail;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
 {
@@ -89,4 +90,63 @@ class AuthController extends Controller
 
         return redirect()->route('auth.login.index')->with('success', 'Xác nhận email thành công. Vui lòng đăng nhập.');
     }
+    public function forgotPassword(Request $request)
+    {
+        return view('client.page.auth.forgot-password');
+    }
+
+    public function forgotPasswordPost(Request $request)
+    {
+        // Xử lý logic gửi email đặt lại mật khẩu ở đây
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ],[
+            'email.required' => 'Vui lòng nhập email',
+            'email.email' => 'Định dạng email không hợp lệ',
+        ]);
+
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === Password::ResetLinkSent
+        ? back()->with('success', __('Đã gửi mail đặt lại mật khẩu thành công'))
+        : back()->with('error', ('Gửi mail không thành công'));
+
+    }
+    public function resetPassword(Request $request,$token)
+    {   
+        $email=$request->email;
+     return view('client.page.auth.reset-password',compact(
+        'token',
+        'email'));
+     }
+     public function resetPasswordPost(Request $request)
+     {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|string|min:8|confirmed',
+        ],[
+            'email.required' => 'Vui lòng nhập email',
+            'email.email' => 'Định dạng email không hợp lệ',
+            'email.exists' => 'Email không tồn tại trong hệ thống',
+            'password.required' => 'Vui lòng nhập mật khẩu',
+            'password.confirmed' => 'Mật khẩu xác nhận không khớp',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => bcrypt($password)
+                ])->save();
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+                    ? redirect()->route('auth.login.index')->with('success', __('Đặt lại mật khẩu thành công'))
+                    : back()->withErrors(['email' => [__('Đặt lại mật khẩu không thành công')]]);
+
+     }
 }
